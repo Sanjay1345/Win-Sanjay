@@ -62,6 +62,8 @@ logging.basicConfig(
     ],
 )
 log = logging.getLogger("va-bot")
+# httpx logs every request URL, which contains the bot token; keep it out of bot.log.
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
 # --- Excel, all COM calls on one dedicated thread ------------------------------
