@@ -51,13 +51,30 @@ Anyone else who finds the bot gets "Not authorised".
 | `/sheets` | Lists sheet names |
 | `/help` | Command list |
 
+## How it decides the data is ready
+After writing the ticker it runs a full recalc and checks every 0.5s. It accepts
+when Excel says calculation is finished, no formula cell in the output range
+shows an error or loading text, and two checks in a row match. Requests are
+handled one at a time; a second request waits ("Queued behind another request…").
+Every request is logged to `bot.log` with ticker, wait time and outcome.
+
+Tests for this logic (no Excel needed): `python -m unittest test_completion`
+
 ## Keep it running
 - Windows power settings: **Sleep → Never** while plugged in.
 - To start automatically: press `Win+R`, type `shell:startup`, put a shortcut to `start_bot.bat` there.
 
 ## Troubleshooting
-- **Cells come back as loading text / timeout:** raise `CALC_TIMEOUT` in `.env`.
-  If your add-in shows a different loading message, add it to `LOADING_MARKERS` in `bot.py`.
+- **"⚠️ Partial — still loading: …":** those rows still showed an Excel error or
+  loading text when `CALC_TIMEOUT` ran out. Raise `CALC_TIMEOUT`, or if a metric
+  is genuinely `#N/A` for that company, remove it from the template. If your add-in
+  shows a different loading message, add it to `LOADING_MARKERS` in `completion.py`.
+- **"⚠️ Numbers unchanged from the previous ticker":** the add-in may not have
+  fetched the new ticker. Run `/q` again.
+- **Hidden Excel vs your Excel:** the bot opens its own hidden Excel and connects
+  the Visible Alpha add-in there, so your own window is left alone. If the add-in
+  can't load there, it falls back to your open workbook (see `bot.log`, which also
+  lists every add-in found at startup).
 - **Old numbers:** make sure the VA add-in is signed in on the PC; try `/refresh`.
 - **Errors about the workbook:** check `WORKBOOK_PATH` and that the sheet is named `Bot`.
 
